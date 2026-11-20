@@ -1,0 +1,41 @@
+# Starter pre-commit config for the mechanical part of pr-tidy.
+# Copy to the repository root as .pre-commit-config.yaml, then:
+#   uvx pre-commit install --hook-type pre-commit --hook-type pre-push
+#   uvx pre-commit autoupdate          # pin the latest released hook versions
+#   uvx pre-commit run --all-files
+# Remove the hooks a repository doesn't need.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: detect-private-key
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.3.0
+    hooks:
+      - id: codespell
+
+  # Tests on push, not on every commit. diff-cover fails if the lines this
+  # branch changed are under-tested (adjust --fail-under and the compare branch).
+  - repo: local
+    hooks:
+      - id: pytest-diff-cover
+        name: pytest with coverage of changed lines
+        entry: bash -c 'uv run --with pytest --with pytest-cov --with diff-cover sh -c "pytest -q --cov --cov-report=xml && diff-cover coverage.xml --compare-branch=origin/main --fail-under=80"'
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
