@@ -17,6 +17,13 @@ repos:
       - id: check-added-large-files
       - id: detect-private-key
 
+  # Secrets in staged changes. Scanners miss personal data, so pr-tidy still
+  # reads the diff for emails, names, and home paths.
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.8.4
     hooks:

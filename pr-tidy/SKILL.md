@@ -1,6 +1,6 @@
 ---
 name: pr-tidy
-description: Use before opening or updating a pull request, after a refactor, rename, removal, or design change, or when asked to tidy, clean up, or sweep a branch. Finds what the diff left behind — stale references and old-design wording, new behaviour without tests or docs, checkers not wired into the validator or CI or that pass silently, and numbers or examples that no longer match their source — fixes the factual ones, flags the rest, and reports both with evidence.
+description: Use before opening or updating a pull request, after a refactor, rename, removal, or design change, or when asked to tidy, clean up, or sweep a branch. Finds what the diff left behind — stale references and old-design wording, new behaviour without tests or docs, checkers not wired into the validator or CI or that pass silently, numbers or examples that no longer match their source, and personal information or credentials about to be committed — fixes the factual ones, flags the rest, and reports both with evidence.
 ---
 
 # PR tidy
@@ -86,7 +86,34 @@ List every number, version, date, URL, citation, command, and code example in th
 - **Pin external sources** to a version.
 - Numbers that will keep changing are better generated from code (for example with `cog`, checked by `cog --check`) than typed by hand; suggest it.
 
-## 6. Fix or flag
+## 6. Personal information and credentials
+
+Check everything the branch adds, and every untracked file about to be added, before it leaves the machine. This is blocking: nothing below is "fixed" by moving on.
+
+```bash
+git diff "$base"...HEAD          # committed on the branch
+git diff; git diff --cached      # not yet committed
+git status --short               # untracked files that may be added
+```
+
+Look for:
+
+- **Credentials:** API keys, tokens, passwords, connection strings with passwords, private keys (`-----BEGIN … PRIVATE KEY-----`), cloud and CI secrets, session cookies.
+- **Files that hold them:** `.env*`, `*.pem`, `*.key`, `id_rsa*`, `credentials*`, `secrets*`, `*.p12`, service-account JSON, `.npmrc` or `.pypirc` with tokens, local settings files.
+- **Personal information:** email addresses, phone numbers, home or postal addresses, real names in examples or test data, account or ID numbers, and identifying data about other people.
+- **Machine details:** absolute home paths (`/Users/<name>`, `/home/<name>`, `C:\Users\<name>`), internal hostnames, private IP addresses, usernames in logs or notebook outputs.
+- **Hidden places:** notebook outputs and metadata, logs, screenshots, fixtures, generated reports, commit messages, and the full history of the branch, not just its final state.
+
+Run a scanner if the repository has one (`gitleaks`, `detect-secrets`, `pre-commit run --all-files`), and read the diff yourself as well; scanners miss personal data.
+
+When you find something:
+
+- **Never repeat the value** in the report or a commit message. Name the file, the line, and the kind of item (`AWS key`, `email address`).
+- **Not yet committed:** remove it, move it to an ignored file or environment variable, and add the pattern to `.gitignore` if it's a file.
+- **Already committed on the branch:** stop and tell the user. A credential that was ever committed must be revoked and replaced, even after the history is rewritten, because it may already be copied. Don't rewrite shared history without the user.
+- **Personal information the user put there on purpose** (their own public name in a license, say): ask, don't remove.
+
+## 7. Fix or flag
 
 Edit minimally, in the file's own voice, structure, and terminology. Read a file fully before editing it.
 
@@ -108,7 +135,7 @@ Edit minimally, in the file's own voice, structure, and terminology. Read a file
 
 **Never:** rewrite or regenerate existing changelog entries, bump a version silently, hand-edit generated files (use their generator), or paste secrets or real credentials.
 
-## 7. Verify with evidence
+## 8. Verify with evidence
 
 No claim without fresh evidence from this session, after the last relevant edit:
 
@@ -119,10 +146,13 @@ No claim without fresh evidence from this session, after the last relevant edit:
 
 Run what the repository already has: its tests, linters, `pre-commit run --all-files`, docs build, and link checks. A tool that isn't installed or a service that's down is a **verification gap**, reported as such, never a pass. "Should pass" and an agent's "done" are not evidence.
 
-## 8. Report
+## 9. Report
 
 ```text
 Scope: <base>..HEAD, N files, M commits
+
+Blocking
+- path:line — kind of credential or personal information (value not shown), and what's needed
 
 Changed
 - path:line — what changed, and why the diff required it
@@ -142,7 +172,7 @@ Not verified
 
 ## The mechanical layer
 
-Most of sections 2–5 needs judgment, but some of it can run on every commit. For a repository without it, offer the starter config in [`references/pre-commit-config.yaml`](references/pre-commit-config.yaml): file hygiene, `ruff`, `codespell`, private-key detection, and `pytest` with `diff-cover` on push. `lychee` link checks and path-gated CI are better in a workflow than in a commit hook.
+Most of sections 2–6 needs judgment, but some of it can run on every commit. For a repository without it, offer the starter config in [`references/pre-commit-config.yaml`](references/pre-commit-config.yaml): file hygiene, `ruff`, `codespell`, private-key and secret detection (`gitleaks`), and `pytest` with `diff-cover` on push. `lychee` link checks and path-gated CI are better in a workflow than in a commit hook.
 
 ## Credits
 

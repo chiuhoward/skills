@@ -4,7 +4,7 @@ Agent skills I use across my repositories. Each folder is one skill in the open 
 
 | Skill | What it does |
 |---|---|
-| [`pr-tidy`](pr-tidy/SKILL.md) | A consistency sweep before a pull request: stale references and old-design wording, tests and docs for new behaviour, checkers wired in and failing loudly, and numbers and examples re-checked against their sources. Includes a starter pre-commit config. |
+| [`pr-tidy`](pr-tidy/SKILL.md) | A consistency sweep before a pull request: stale references and old-design wording, tests and docs for new behaviour, checkers wired in and failing loudly, numbers and examples re-checked against their sources, and a blocking check for personal information and credentials. Includes a starter pre-commit config. |
 
 ## Install
 
